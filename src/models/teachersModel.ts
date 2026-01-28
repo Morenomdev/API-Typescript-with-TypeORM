@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, BaseEntity } from "typeorm"
 import { Course } from "./coursesModel";
 
 @Entity('teachers')
-export class Teacher {
+export class Teacher extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -30,6 +30,6 @@ export class Teacher {
     @UpdateDateColumn()
     updateAt: Date;
 
-    @OneToMany(() => Course, (course) => course.teacher)
+    @OneToMany(() => Course, (course) => course.teacher_id)
     course: Course[]
 }

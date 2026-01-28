@@ -1,60 +1,77 @@
-import { Request, Response } from "express";
-// const db = require('../database/conexion.js')
+// const db = require('../database/conexion.js');
 
+import { Request, Response } from 'express';
+import { Teacher } from '../models/teachersModel';
 
- 
 class TeacherController {
   constructor() {}
-  check(req: Request, res:  Response) {
+  async check(req: Request, res: Response) {
     try {
-      res.send('Checking teachers')
+      const data = await Teacher.find();
+      res.status(200).json(data);
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         res.status(500).send(error.message);
       }
     }
   }
 
-  joining(req: Request, res:  Response) {
+  async checkDetail(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const register = await Teacher.findOneBy({ id: Number(id) });
+      if (!register) {
+        throw new Error('Teacher not found');
+      }
+      res.status(200).json(register);
+      res.send('Check 1 student');
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
+  async joining(req: Request, res: Response) {
     try {
       const { dni, name, lastname, email } = req.body;
-       res.send('joining teacher')
+      const register = await Teacher.save(req.body);
+      res.status(201).json(register);
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         res.status(500).send(error.message);
       }
     }
   }
 
-  update(req: Request, res:  Response) {
+  async update(req: Request, res: Response) {
+    const { id } = req.params;
     try {
-      const { id } = req.params;
-      const { dni, name, lastname, email } = req.body;
-       res.send('update teacher')
+      const register = await Teacher.findOneBy({ id: Number(id) });
+      if (!register) {
+        throw new Error('Teacher not found');
+      }
+      await Teacher.update({ id: Number(id) }, req.body);
+      const registerUpdate = await Teacher.findOneBy({ id: Number(id) });
+      res.status(200).json(registerUpdate);
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         res.status(500).send(error.message);
       }
     }
   }
 
-  erase(req: Request, res:  Response) {
+  async erase(req: Request, res: Response) {
+    const { id } = req.params;
     try {
-      const { id } = req.params;
-      res.send('delete teacher')
-    } catch (error) {
-      if(error instanceof Error){
-        res.status(500).send(error.message);
+      const register = await Teacher.findOneBy({ id: Number(id) });
+      if (!register) {
+        throw new Error('Teacher not found');
       }
-    }
-  }
-
-  checkDetail(req: Request, res:  Response) {
-    try {
-      const { id } = req.params;
-     res.send('Check 1 detail teacher')
+      await Teacher.delete({ id: Number(id) });
+      res.status(204);
     } catch (error) {
-      if(error instanceof Error){
+      if (error instanceof Error) {
         res.status(500).send(error.message);
       }
     }
@@ -62,4 +79,3 @@ class TeacherController {
 }
 
 export default new TeacherController();
- 

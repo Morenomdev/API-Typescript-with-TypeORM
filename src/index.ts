@@ -1,7 +1,7 @@
 import app from './app'
 import { AppDataSource } from './db/conexion';
 
-const port = 3306;
+const port = 6500;
 
 async function main() {
   try {

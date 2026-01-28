@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable, BaseEntity } from 'typeorm';
 import { Teacher } from './teachersModel';
 import { Student } from './studentsModel';
 
 @Entity('courses')
-export class Course {
+export class Course extends BaseEntity {
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,7 +22,7 @@ export class Course {
 
   @ManyToOne(() => Teacher, (teacher) => teacher.course)
   @JoinColumn({ name: 'teacher_id'})
-  teacher: Teacher[]
+  teacher_id: Teacher[]
 
   @ManyToMany(() => Student)
   @JoinTable({

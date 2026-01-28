@@ -1,97 +1,118 @@
-import { Request, Response } from "express";
+// const db = require('../database/conexion.js');
 
-// const db = require('../database/conexion.js')
+import { Request, Response } from 'express';
+import { Course } from '../models/coursesModel';
+import { Teacher } from '../models/teachersModel';
+import { Student } from '../models/studentsModel';
 
-
-class CoursesController {
-  constructor() {
-
-  }
-   check(req: Request, res:  Response) {
-     try {
-       res.send('Checking courses')
-     } catch (error) {
-       if(error instanceof Error){
-         res.status(500).send(error.message);
-       }
-     }
-   }
- 
-   joining(req: Request, res:  Response) {
-     try {
-       const { dni, name, lastname, email } = req.body;
-        res.send('joining course')
-     } catch (error) {
-       if(error instanceof Error){
-         res.status(500).send(error.message);
-       }
-     }
-   }
- 
-   update(req: Request, res:  Response) {
-     try {
-       const { id } = req.params;
-       const { dni, name, lastname, email } = req.body;
-        res.send('update course')
-     } catch (error) {
-       if(error instanceof Error){
-         res.status(500).send(error.message);
-       }
-     }
-   }
- 
-   erase(req: Request, res:  Response) {
-     try {
-       const { id } = req.params;
-       res.send('delete')
-     } catch (error) {
-       if(error instanceof Error){
-         res.status(500).send(error.message);
-       }
-     }
-   }
- 
-   checkDetail(req: Request, res:  Response) {
-     try {
-       const { id } = req.params;
-      res.send('Check detail')
-     } catch (error) {
-       if(error instanceof Error){
-         res.status(500).send(error.message);
-       }
-     }
-   }
- 
- 
-
-   associateStudent(req: Request, res:  Response)  {
+class CourseController {
+  constructor() {}
+  async check(req: Request, res: Response) {
     try {
-      const {course_id, students_id } = req.body;
-       res.send('associate course')
-      // db.query(
-      //   `INSERT INTO courses_students
-      //           (course_id, students_id)
-      //           VALUES(?, ?);`,
-      //   [course_id, students_id],
-      //   (error, rows) => {
-      //     if (error) {
-      //       res.status(400).send(error);
-      //     } else {
-            
-      //       res.status(201).json({msg: 'Student associate with a course'});
-      //     }
-      //   },
-      // );
+      const data = await Course.find({
+        relations: { teacher_id: true, students: true },
+      });
+      res.status(200).json(data);
     } catch (error) {
-      if(error instanceof Error){
-         res.status(500).send(error.message);
-       }
-      // // console.log(error);
-      // res.status(500).send(error.message);
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
     }
   }
 
+  async checkDetail(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const register = await Course.findOne({
+        where: { id: Number(id) },
+        relations: { teacher_id: true, students: true },
+      });
+      if (!register) {
+        throw new Error('Course not found');
+      }
+      res.status(200).json(register);
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
 
+  async joining(req: Request, res: Response) {
+    try {
+      const { teacher_id } = req.body;
+      const teacher = await Teacher.findOneBy({ id: Number(teacher_id) });
+      if (!teacher) {
+        throw new Error('Teacher not found');
+      }
+      const register = await Course.save(req.body);
+      res.status(201).json(register);
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
+  async update(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const { teacher_id } = req.body;
+      const teacher = await Teacher.findOneBy({ id: Number(teacher_id) });
+      if (!teacher) {
+        throw new Error('Teacher not found');
+      }
+      const register = await Course.findOneBy({ id: Number(id) });
+      if (!register) {
+        throw new Error('Course not found');
+      }
+      await Course.update({ id: Number(id) }, req.body);
+      const registerUpdate = await Course.findOne({
+        where: { id: Number(id) },
+        relations: { teacher_id: true, students: true },
+      });
+      res.status(200).json(registerUpdate);
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
+  async erase(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const register = await Course.findOneBy({ id: Number(id) });
+      if (!register) {
+        throw new Error('Course not found');
+      }
+      await Course.delete({ id: Number(id) });
+      res.status(204).send();
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
+
+  async associateStudent(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+      const { students_id, course_id } = req.body;
+      const student = await Student.findOneBy({ id: Number(students_id) });
+      const course = await Course.findOneBy({ id: Number(course_id) });
+      if (!course) throw new Error('Course not found');
+      if (!student) throw new Error('Student not found');
+      course.students = course.students || []
+      course.students.push(student)
+      const register = await Course.save(course)
+      res.status(200).json(register)
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(500).send(error.message);
+      }
+    }
+  }
 }
 
-export default new CoursesController();
+export default new CourseController();
